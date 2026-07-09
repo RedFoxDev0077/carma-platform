@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { --navy:#1F2A44; --blue:#2B59A6; --green:#1E7A3C; --red:#B02A2A; --grey:#555; }
+  * { box-sizing:border-box; }
+  body { font-family:"Helvetica Neue",Arial,sans-serif; color:#222; margin:0; font-size:12px; }
+  .page { padding:32px 40px; }
+  header { display:flex; justify-content:space-between; align-items:flex-end;
+           border-bottom:3px solid var(--blue); padding-bottom:10px; }
+  .brand { font-size:26px; font-weight:800; color:var(--navy); letter-spacing:1px; }
+  .plate { font-size:18px; font-weight:700; color:var(--blue);
+           border:2px solid var(--navy); border-radius:6px; padding:4px 12px; }
+  .score-wrap { display:flex; align-items:center; gap:18px; margin:22px 0; }
+  .gauge { width:120px; height:120px; border-radius:50%;
+           background:conic-gradient(var(--green) calc({{ score_pct }}*1%), #e6e6e6 0);
+           display:flex; align-items:center; justify-content:center; }
+  .gauge .inner { width:92px; height:92px; background:#fff; border-radius:50%;
+           display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .gauge .num { font-size:30px; font-weight:800; color:var(--navy); }
+  .gauge .lbl { font-size:9px; color:var(--grey); text-transform:uppercase; }
+  h2 { font-size:13px; color:var(--navy); border-left:4px solid var(--blue);
+       padding-left:8px; margin:22px 0 8px; }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:5px 8px; border-bottom:1px solid #eee; }
+  td.k { color:var(--grey); width:45%; }
+  .flags li { color:var(--red); margin:3px 0; }
+  .ok { color:var(--green); font-weight:700; }
+  .bad { color:var(--red); font-weight:700; }
+  .radar { display:flex; gap:10px; flex-wrap:wrap; }
+  .bar { flex:1; min-width:90px; }
+  .bar .track { background:#e6e6e6; height:8px; border-radius:4px; overflow:hidden; }
+  .bar .fill { height:8px; background:var(--blue); }
+  .bar .cap { font-size:9px; color:var(--grey); margin-top:2px; }
+  .ai { background:#EEF3FB; border:1px solid #C9D8EE; border-radius:8px; padding:12px; }
+  footer { margin-top:26px; font-size:9px; color:#999; border-top:1px solid #eee; padding-top:8px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="brand">CARMA</div>
+    <div class="plate">{{ plate }}</div>
+  </header>
+
+  <div class="score-wrap">
+    <div class="gauge"><div class="inner">
+      <div class="num">{{ score }}</div><div class="lbl">Score /10</div>
+    </div></div>
+    <div>
+      <h2 style="margin-top:0">Resumen</h2>
+      <div>{{ tech.brand }} {{ tech.model }} {{ tech.year or '' }} ·
+           {{ tech.body_style }} · {{ tech.fuel|upper }}</div>
+      <div>Kilometraje: {{ tech.mileage_km or 's/d' }} km</div>
+      {% if valuation %}<div>Valorización estimada: S/ {{ '%.0f'|format(valuation) }}</div>{% endif %}
+    </div>
+  </div>
+
+  <h2>Indicadores (radar)</h2>
+  <div class="radar">
+    {% for k, v in radar.items() %}
+    <div class="bar">
+      <div class="track"><div class="fill" style="width:{{ v }}%"></div></div>
+      <div class="cap">{{ k }} · {{ v }}%</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <h2>Situación legal y financiera</h2>
+  <table>
+    <tr><td class="k">Papeletas / multas</td><td>S/ {{ '%.2f'|format(tech.fines_total_soles) }}</td></tr>
+    <tr><td class="k">Deuda tributaria</td><td>S/ {{ '%.2f'|format(tech.tax_debt_soles) }}</td></tr>
+    <tr><td class="k">Gravámenes</td><td>{% if tech.has_liens %}<span class="bad">Sí</span>{% else %}<span class="ok">No</span>{% endif %}</td></tr>
+    <tr><td class="k">Orden de captura</td><td>{% if tech.has_capture_order %}<span class="bad">Sí</span>{% else %}<span class="ok">No</span>{% endif %}</td></tr>
+    <tr><td class="k">Reporte de robo</td><td>{% if tech.has_theft_report %}<span class="bad">Sí</span>{% else %}<span class="ok">No</span>{% endif %}</td></tr>
+    <tr><td class="k">SOAT vigente</td><td>{% if tech.soat_valid %}<span class="ok">Sí</span>{% else %}<span class="bad">No</span>{% endif %}</td></tr>
+    <tr><td class="k">Revisión técnica (CITV)</td><td>{% if tech.citv_valid %}<span class="ok">Sí</span>{% else %}<span class="bad">No</span>{% endif %}</td></tr>
+    <tr><td class="k">Historial pérdida total</td><td>{% if tech.total_loss_history %}<span class="bad">Sí</span>{% else %}<span class="ok">No</span>{% endif %}</td></tr>
+  </table>
+
+  {% if red_flags %}
+  <h2>Red Flags</h2>
+  <ul class="flags">{% for f in red_flags %}<li>{{ f }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  {% if knowledge.known_defects or knowledge.market_notes %}
+  <h2>Inteligencia del modelo</h2>
+  {% if knowledge.safety_score %}<div>Seguridad (NCAP): {{ knowledge.safety_score }}/5 ·
+       Fiabilidad: {{ knowledge.reliability_score or 's/d' }}/5</div>{% endif %}
+  {% if knowledge.known_defects %}<div>Fallas conocidas:
+       {{ knowledge.known_defects|join(', ') }}</div>{% endif %}
+  {% if knowledge.market_notes %}<div>{{ knowledge.market_notes }}</div>{% endif %}
+  {% endif %}
+
+  {% if ai_summary %}
+  <h2>Análisis del asesor</h2>
+  <div class="ai">{{ ai_summary }}</div>
+  {% endif %}
+
+  <footer>
+    Reporte generado por CARMA · Datos técnicos e históricos con fines informativos.
+    Los datos personales de personas naturales se procesan solo en memoria y se eliminan
+    tras el envío (Ley N° 29733). Score calculado por motor de reglas CARMA.
+  </footer>
+</div>
+</body>
+</html>

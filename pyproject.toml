@@ -1,0 +1,18 @@
+[project]
+name = "carma"
+version = "0.1.0"
+description = "CARMA — WhatsApp vehicle-report platform"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501", "B008"]  # B008: FastAPI Depends() in defaults is intentional
