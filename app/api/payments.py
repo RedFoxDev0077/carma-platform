@@ -1,7 +1,9 @@
 """Payment gateway webhook — confirms payment then kicks off the scrape job."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Request, Response, Depends
+from datetime import UTC
+
+from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -26,9 +28,9 @@ async def payment_webhook(request: Request, db: Session = Depends(get_db)):
         return Response(status_code=404)
 
     if result["paid"] and order.status in (OrderStatus.AWAITING_PAYMENT, OrderStatus.NEW):
-        from datetime import datetime, timezone
+        from datetime import datetime
         order.status = OrderStatus.PAID
-        order.paid_at = datetime.now(timezone.utc)
+        order.paid_at = datetime.now(UTC)
         order.payment_ref = result["ref"]
         db.commit()
         # hand off to the worker so the webhook returns fast

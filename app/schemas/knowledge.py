@@ -18,5 +18,5 @@ class KnowledgeEntry(BaseModel):
     structural_metrics: dict = Field(default_factory=dict)
 
     @classmethod
-    def empty(cls) -> "KnowledgeEntry":
+    def empty(cls) -> KnowledgeEntry:
         return cls()

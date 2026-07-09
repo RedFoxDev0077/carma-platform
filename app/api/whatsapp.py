@@ -10,9 +10,9 @@ from __future__ import annotations
 import hashlib
 import hmac
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from fastapi import APIRouter, Request, Response, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -80,7 +80,7 @@ async def _handle_message(db: Session, msg: dict) -> None:
     )
     if order:
         # 30-minute session close check
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if order.chat_expires_at and now >= order.chat_expires_at:
             order.status = OrderStatus.CHAT_CLOSED
             db.commit()

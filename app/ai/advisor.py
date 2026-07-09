@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import re
 
-from app.config import settings
 from app.ai.prompts import build_system_prompt
-from app.schemas.chat import ChatState, ChatMessage
+from app.config import settings
+from app.schemas.chat import ChatMessage, ChatState
 from app.schemas.knowledge import KnowledgeEntry
 from app.schemas.report import ReportData
 

@@ -2,19 +2,17 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select, update
 
-from app.config import settings
+from app.ai.advisor import advisor
 from app.database import SessionLocal
-from app.models import Order, OrderStatus, Conversation, Message, MessageRole, VehicleRecord
-from app.schemas.chat import ChatState, ChatMessage
-from app.schemas.knowledge import KnowledgeEntry
+from app.models import Conversation, Message, MessageRole, Order, OrderStatus, VehicleRecord
+from app.schemas.chat import ChatMessage, ChatState
 from app.schemas.report import ReportData, VehicleTechnical
 from app.services import report as report_svc
 from app.services.whatsapp_client import whatsapp
-from app.ai.advisor import advisor
 from app.tasks.celery_app import celery
 
 
@@ -76,8 +74,8 @@ def advisor_turn(order_id: int, user_text: str) -> None:
 @celery.task(name="app.tasks.jobs.recover_abandoned")
 def recover_abandoned() -> None:
     """Nudge users who started a query but never paid (client: recovery loop)."""
-    cutoff_recent = datetime.now(timezone.utc) - timedelta(minutes=20)
-    cutoff_old = datetime.now(timezone.utc) - timedelta(hours=24)
+    cutoff_recent = datetime.now(UTC) - timedelta(minutes=20)
+    cutoff_old = datetime.now(UTC) - timedelta(hours=24)
     with SessionLocal() as db:
         stale = db.scalars(
             select(Order).where(
@@ -98,7 +96,7 @@ def recover_abandoned() -> None:
 
 @celery.task(name="app.tasks.jobs.close_expired_chats")
 def close_expired_chats() -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     with SessionLocal() as db:
         db.execute(
             update(Order)

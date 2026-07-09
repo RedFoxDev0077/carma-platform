@@ -4,14 +4,14 @@ JSON 1 — ReportData     : scraped report + valuation injected into PDF & AI pr
 JSON 2 — KnowledgeEntry : proprietary per-model intelligence injected into AI prompt & PDF.
 JSON 3 — ChatState      : conversation history + strict 15-message countdown.
 """
+from app.schemas.chat import ChatMessage, ChatState
+from app.schemas.knowledge import KnowledgeEntry
 from app.schemas.report import (
-    PortalResult,
     PersonalData,
+    PortalResult,
     ReportData,
     VehicleTechnical,
 )
-from app.schemas.knowledge import KnowledgeEntry
-from app.schemas.chat import ChatMessage, ChatState
 
 __all__ = [
     "PortalResult",

@@ -8,16 +8,20 @@ Plus a CRUD dictionary for the 150-car knowledge base.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import select, func, desc
+from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import (
-    Order, OrderStatus, VehicleRecord, CarKnowledge, PortalHealthEvent, FeedbackVote,
+    CarKnowledge,
+    Order,
+    OrderStatus,
+    PortalHealthEvent,
+    VehicleRecord,
 )
 from app.rpa.registry import all_portals
 
@@ -54,7 +58,7 @@ def control(db: Session = Depends(get_db), limit: int = 50) -> dict:
     } for o in orders]
 
     # semáforo: portal health over last hour
-    since = datetime.now(timezone.utc) - timedelta(hours=1)
+    since = datetime.now(UTC) - timedelta(hours=1)
     semaforo = []
     for key, cls in all_portals().items():
         rows = db.scalars(select(PortalHealthEvent).where(

@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from app.config import settings
 from app.rpa.captcha import CaptchaSolver
 from app.rpa.registry import base_portals, paid_portals
-from app.schemas.report import PortalResult, ReportData, VehicleTechnical, PersonalData
+from app.schemas.report import PersonalData, PortalResult, ReportData, VehicleTechnical
 
 # Base portals whose failure means we should not spend money yet.
 ESSENTIAL_BASE = {"sat", "sutran", "mtc_citv"}
@@ -78,7 +78,7 @@ class Orchestrator:
                     return await asyncio.wait_for(
                         scraper.fetch(plate), timeout=settings.rpa_timeout_seconds
                     )
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     return PortalResult(
                         portal=cls.meta.key, ok=False, free=cls.meta.free,
                         error="timeout",
@@ -90,7 +90,6 @@ class Orchestrator:
         """Merge portal payloads into JSON 1. Personal data isolated in memory."""
         tech = VehicleTechnical()
         personal = PersonalData()
-        red_flags: list[str] = []
         fines = 0.0
 
         by_key = {r.portal: r for r in results}
@@ -123,16 +122,18 @@ class Orchestrator:
         tech.total_loss_history = d("sbs").get("total_loss_history", False)
         tech.fines_total_soles = round(fines, 2)
 
-        # red-flag synthesis
-        if tech.has_liens: red_flags.append("Gravamen/embargo vigente")
-        if tech.has_capture_order: red_flags.append("Orden de captura vehicular")
-        if tech.has_theft_report: red_flags.append("Reporte de robo activo")
-        if tech.total_loss_history: red_flags.append("Historial de pérdida total")
-        if not tech.soat_valid: red_flags.append("SOAT no vigente")
-        if not tech.citv_valid: red_flags.append("Revisión técnica no vigente")
-        if tech.ownership_transfers_90d: red_flags.append("Transferencia reciente (<90 días)")
-        if tech.fines_total_soles > 1000: red_flags.append("Papeletas elevadas")
-        tech.red_flags = red_flags
+        # red-flag synthesis: (condition, label)
+        signals = [
+            (tech.has_liens, "Gravamen/embargo vigente"),
+            (tech.has_capture_order, "Orden de captura vehicular"),
+            (tech.has_theft_report, "Reporte de robo activo"),
+            (tech.total_loss_history, "Historial de pérdida total"),
+            (not tech.soat_valid, "SOAT no vigente"),
+            (not tech.citv_valid, "Revisión técnica no vigente"),
+            (bool(tech.ownership_transfers_90d), "Transferencia reciente (<90 días)"),
+            (tech.fines_total_soles > 1000, "Papeletas elevadas"),
+        ]
+        tech.red_flags = [label for cond, label in signals if cond]
 
         return ReportData(
             plate=plate,

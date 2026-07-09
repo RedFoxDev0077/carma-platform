@@ -9,13 +9,13 @@ personal ever touches the database.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.models import Order, OrderStatus, VehicleRecord, CarKnowledge, PortalHealthEvent
+from app.models import CarKnowledge, Order, OrderStatus, PortalHealthEvent, VehicleRecord
 from app.pdf.compiler import render_pdf
 from app.rpa.orchestrator import Orchestrator
 from app.schemas.knowledge import KnowledgeEntry
@@ -101,7 +101,7 @@ async def process_paid_order(db: Session, order: Order) -> None:
                 "Puedes hacerme hasta 15 preguntas sobre este auto. 🚗",
     )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     order.report_sent_at = now
     order.chat_expires_at = now + timedelta(minutes=settings.whatsapp_session_minutes)
     order.status = OrderStatus.CHAT_OPEN

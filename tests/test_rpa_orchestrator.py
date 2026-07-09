@@ -4,7 +4,7 @@ Runs in demo mode (settings.env != production) so no live portals are hit.
 """
 import asyncio
 
-from app.rpa.orchestrator import Orchestrator, ESSENTIAL_BASE
+from app.rpa.orchestrator import ESSENTIAL_BASE, Orchestrator
 from app.rpa.registry import all_portals, base_portals, paid_portals
 
 

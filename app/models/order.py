@@ -4,13 +4,14 @@ from __future__ import annotations
 import enum
 from datetime import datetime
 
-from sqlalchemy import String, Float, Enum as SAEnum, DateTime, func, Index
+from sqlalchemy import DateTime, Float, Index, String, func
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
 
-class OrderStatus(str, enum.Enum):
+class OrderStatus(enum.StrEnum):
     NEW = "new"                      # plate received, awaiting payment
     AWAITING_PAYMENT = "awaiting_payment"
     PAID = "paid"

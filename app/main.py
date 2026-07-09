@@ -7,8 +7,8 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 
 from app import __version__
+from app.api import dashboard, payments, whatsapp
 from app.config import settings
-from app.api import whatsapp, payments, dashboard
 
 app = FastAPI(
     title="CARMA API",

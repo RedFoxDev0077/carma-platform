@@ -57,6 +57,6 @@ class ReportData(BaseModel):
     score: float | None = None                 # 1-10, filled by PDF compiler
     portals: list[PortalResult] = Field(default_factory=list)
 
-    def strip_personal(self) -> "ReportData":
+    def strip_personal(self) -> ReportData:
         """Return a copy with all personal data removed (for persistence/analytics)."""
         return self.model_copy(update={"personal": None})
